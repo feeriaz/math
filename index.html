@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Космическая таблица умножения</title>
+  
+  <!-- Telegram Web App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Салют / Конфетти -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-space: #130a2a;
+      --card-bg: #231d4b;
+      --card-inner: #191439;
+      --header-plate: #2f2563;
+      --border-blue: #3d4a85;
+      --accent-cyan: #00f2fe;
+      --accent-yellow: #ffb703;
+      --accent-yellow-shadow: #c28800;
+      --accent-green: #70e000;
+      --accent-green-shadow: #38b000;
+      --accent-red: #ff3366;
+      --accent-red-shadow: #b30030;
+      --accent-blue: #3a86ff;
+      --accent-blue-shadow: #1d4ed8;
+      --text-white: #ffffff;
+      --text-muted: #8d93c4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Arial Rounded MT Bold', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-space);
+      background-image: 
+        radial-gradient(circle at 20% 15%, rgba(100, 50, 200, 0.3) 0%, transparent 40%),
+        radial-gradient(circle at 80% 85%, rgba(0, 200, 255, 0.2) 0%, transparent 40%),
+        radial-gradient(2px 2px at 40px 60px, #fff, rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 120px 180px, #fff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 280px 240px, #a8edea, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 320px 80px, #fff, rgba(0,0,0,0));
+      background-repeat: repeat;
+      background-size: cover, cover, 300px 300px, 250px 250px, 350px 350px, 200px 200px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+      overflow-x: hidden;
+    }
+
+    /* Главный контейнер (карточка) */
+    .app-container {
+      background: var(--card-bg);
+      border: 2px solid var(--border-blue);
+      border-radius: 28px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding-bottom: 24px;
+    }
+
+    /* Верхняя плашка ХАНГАР / РЕЖИМ */
+    .top-header {
+      width: 100%;
+      background: var(--header-plate);
+      padding: 14px 0;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--text-white);
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border-blue);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 0 20px;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Слайдер выбора на главном экране */
+    .ship-stage {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .ship-icon {
+      font-size: 5.5rem;
+      filter: drop-shadow(0 10px 15px rgba(0, 242, 254, 0.3));
+      animation: floatShip 3s ease-in-out infinite alternate;
+      z-index: 2;
+    }
+
+    @keyframes floatShip {
+      0% { transform: translateY(0px) rotate(-3deg); }
+      100% { transform: translateY(-12px) rotate(4deg); }
+    }
+
+    .podium-glow {
+      position: absolute;
+      bottom: 12px;
+      width: 130px;
+      height: 26px;
+      background: radial-gradient(ellipse, #00f2fe 30%, rgba(0, 242, 254, 0) 75%);
+      border-radius: 50%;
+      box-shadow: 0 0 25px #00f2fe;
+    }
+
+    .slider-arrow {
+      position: absolute;
+      top: 40%;
+      font-size: 2.2rem;
+      color: #5c67a3;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      transition: 0.2s;
+    }
+    .slider-arrow:active { color: var(--accent-cyan); transform: scale(1.15); }
+    .slider-arrow.left { left: 0; }
+    .slider-arrow.right { right: 0; }
+
+    .mode-title {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #38ef7d;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    /* Информационная плашка */
+    .info-card {
+      background: var(--card-inner);
+      border: 2px solid var(--border-blue);
+      border-radius: 18px;
+      width: 100%;
+      padding: 14px 18px;
+      margin: 14px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-white);
+    }
+    .info-row span:last-child {
+      color: var(--accent-yellow);
+      font-size: 1.25rem;
+    }
+
+    /* Область отображения примера */
+    .equation-display {
+      background: var(--card-inner);
+      border: 3px solid var(--border-blue);
+      border-radius: 20px;
+      width: 100%;
+      padding: 20px 10px;
+      margin: 16px 0;
+      text-align: center;
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--text-white);
+      letter-spacing: 2px;
+      box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), 0 0 15px rgba(61, 74, 133, 0.4);
+    }
+
+    /* 3D Кнопки */
+    .btn-3d {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 1.35rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 18px;
+      cursor: pointer;
+      color: #1a153a;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-3d:active {
+      transform: translateY(4px);
+    }
+
+    /* Цвета кнопок */
+    .btn-yellow {
+      background: var(--accent-yellow);
+      box-shadow: 0 6px 0 var(--accent-yellow-shadow), 0 10px 15px rgba(0,0,0,0.4);
+    }
+    .btn-yellow:active {
+      box-shadow: 0 2px 0 var(--accent-yellow-shadow);
+    }
+
+    .btn-green {
+      background: var(--accent-green);
+      box-shadow: 0 6px 0 var(--accent-green-shadow), 0 10px 15px rgba(0,0,0,0.4);
+    }
+    .btn-green:active {
+      box-shadow: 0 2px 0 var(--accent-green-shadow);
+    }
+
+    .btn-red {
+      background: var(--accent-red);
+      color: #fff;
+      box-shadow: 0 6px 0 var(--accent-red-shadow), 0 10px 15px rgba(0,0,0,0.4);
+    }
+    .btn-red:active {
+      box-shadow: 0 2px 0 var(--accent-red-shadow);
+    }
+
+    .btn-blue {
+      background: var(--accent-blue);
+      color: #fff;
+      box-shadow: 0 6px 0 var(--accent-blue-shadow), 0 10px 15px rgba(0,0,0,0.4);
+    }
+    .btn-blue:active {
+      box-shadow: 0 2px 0 var(--accent-blue-shadow);
+    }
+
+    /* Варианты ответов в тесте */
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    .btn-choice {
+      background: var(--header-plate);
+      border: 2px solid var(--border-blue);
+      color: var(--text-white);
+      font-size: 2rem;
+      font-weight: 900;
+      padding: 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 5px 0 var(--card-inner);
+      transition: 0.1s;
+    }
+    .btn-choice:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 var(--card-inner);
+      background: #3e337d;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .progress-text {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .result-stars {
+      font-size: 3rem;
+      color: var(--accent-yellow);
+      margin: 10px 0;
+      text-shadow: 0 0 15px rgba(255, 183, 3, 0.6);
+    }
+
+    .result-text {
+      color: var(--text-white);
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="top-header" id="header-title">КОСМОДРОМ</div>
+
+    <!-- 1. ГЛАВНЫЙ ЭКРАН (ВЫБОР РЕЖИМА) -->
+    <div id="screen-main" class="screen active">
+      <div class="ship-stage">
+        <button class="slider-arrow left" onclick="switchMode(-1)">◀</button>
+        <div id="main-ship" class="ship-icon">🚀</div>
+        <div class="podium-glow"></div>
+        <button class="slider-arrow right" onclick="switchMode(1)">▶</button>
+      </div>
+
+      <div id="main-mode-title" class="mode-title">ТРЕНАЖЁР</div>
+
+      <div class="info-card" id="main-mode-info">
+        <!-- Заполняется JS -->
+      </div>
+
+      <button id="main-start-btn" class="btn-3d btn-yellow" onclick="handleStartAction()">
+        ВОЙТИ В ТРЕНАЖЁР
+      </button>
+    </div>
+
+    <!-- 2. ЭКРАН ТРЕНАЖЁРА -->
+    <div id="screen-trainer" class="screen">
+      <div class="progress-text">ИЗУЧЕНИЕ ТАБЛИЦЫ</div>
+      <div id="trainer-display" class="equation-display">3 × 4 = 12</div>
+      
+      <div class="controls-row">
+        <button class="btn-3d btn-blue" onclick="trainerPrev()">◀ НАЗАД</button>
+        <button class="btn-3d btn-yellow" onclick="trainerNext()">ВПЕРЁД ▶</button>
+      </div>
+
+      <button class="btn-3d btn-red" style="margin-top: 14px;" onclick="goToMain()">
+        🏠 В МЕНЮ
+      </button>
+    </div>
+
+    <!-- 3. ЭКРАН ТЕСТА -->
+    <div id="screen-test" class="screen">
+      <div id="test-progress" class="progress-text">ВОПРОС 1 ИЗ 20</div>
+      <div id="test-question" class="equation-display">6 × 7 = ?</div>
+
+      <div class="options-container" id="test-options">
+        <!-- 3 варианта ответа -->
+      </div>
+
+      <div class="controls-row">
+        <button class="btn-3d btn-red" style="font-size: 1.1rem;" onclick="stopTest()">⏹ СТОП</button>
+        <button class="btn-3d btn-blue" style="font-size: 1.1rem;" onclick="goToMain()">🏠 МЕНЮ</button>
+      </div>
+    </div>
+
+    <!-- 4. ЭКРАН РЕЗУЛЬТАТОВ -->
+    <div id="screen-results" class="screen">
+      <div id="result-stars" class="result-stars">★★★</div>
+      <div id="result-text" class="result-text">ТЫ МОЛОДЕЦ!</div>
+      
+      <div id="result-buttons" style="width: 100%;">
+        <!-- Динамические кнопки -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    const TOTAL_QUESTIONS = 20;
+    const PASS_PERCENT = 0.8; // 80% (16 верных ответов)
+
+    // Режимы в меню: 0 - Тренажёр, 1 - Тест
+    let currentMode = 0; 
+
+    // Состояние тренажёра
+    let trainerHistory = [];
+    let trainerIndex = -1;
+
+    // Состояние теста
+    let testQuestions = [];
+    let currentTestIndex = 0;
+    let correctAnswersCount = 0;
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      const title = document.getElementById('header-title');
+      if (id === 'screen-main') title.innerText = 'КОСМОДРОМ';
+      if (id === 'screen-trainer') title.innerText = 'ТРЕНАЖЁР';
+      if (id === 'screen-test') title.innerText = 'ТЕСТИРОВАНИЕ';
+      if (id === 'screen-results') title.innerText = 'ИТОГИ ПОЛЁТА';
+    }
+
+    function goToMain() {
+      showScreen('screen-main');
+      updateMainMenu();
+    }
+
+    function switchMode(dir) {
+      currentMode = (currentMode + dir + 2) % 2;
+      updateMainMenu();
+    }
+
+    function updateMainMenu() {
+      const ship = document.getElementById('main-ship');
+      const title = document.getElementById('main-mode-title');
+      const info = document.getElementById('main-mode-info');
+      const btn = document.getElementById('main-start-btn');
+
+      if (currentMode === 0) {
+        ship.innerText = '🛸';
+        title.innerText = 'ТРЕНАЖЁР';
+        title.style.color = '#00f2fe';
+        info.innerHTML = `
+          <div class="info-row"><span>Режим:</span><span>Обучение</span></div>
+          <div class="info-row"><span>Множители:</span><span>от 2 до 9</span></div>
+          <div class="info-row"><span>Просмотр:</span><span>Вперед / Назад</span></div>
+        `;
+        btn.className = 'btn-3d btn-yellow';
+        btn.innerText = 'ВХОД В ТРЕНАЖЁР';
+      } else {
+        ship.innerText = '🚀';
+        title.innerText = 'ТЕСТ';
+        title.style.color = '#70e000';
+        info.innerHTML = `
+          <div class="info-row"><span>Вопросы:</span><span>20 заданий</span></div>
+          <div class="info-row"><span>Проходной балл:</span><span>80% (16 из 20)</span></div>
+          <div class="info-row"><span>Варианты:</span><span>1 из 3 верный</span></div>
+        `;
+        btn.className = 'btn-3d btn-green';
+        btn.innerText = 'СТАРТ ТЕСТА';
+      }
+    }
+
+    function handleStartAction() {
+      if (currentMode === 0) {
+        startTrainer();
+      } else {
+        startTest();
+      }
+    }
+
+    function getRandomMultiplier() {
+      return Math.floor(Math.random() * 8) + 2; // 2..9
+    }
+
+    /* ================= ТРЕНАЖЁР ================= */
+    function startTrainer() {
+      trainerHistory = [];
+      trainerIndex = -1;
+      trainerNext();
+      showScreen('screen-trainer');
+    }
+
+    function trainerNext() {
+      if (trainerIndex < trainerHistory.length - 1) {
+        trainerIndex++;
+      } else {
+        const a = getRandomMultiplier();
+        const b = getRandomMultiplier();
+        trainerHistory.push({ a, b, res: a * b });
+        trainerIndex++;
+      }
+      renderTrainer();
+    }
+
+    function trainerPrev() {
+      if (trainerIndex > 0) {
+        trainerIndex--;
+        renderTrainer();
+      }
+    }
+
+    function renderTrainer() {
+      const item = trainerHistory[trainerIndex];
+      document.getElementById('trainer-display').innerText = `${item.a} × ${item.b} = ${item.res}`;
+    }
+
+    /* ================= ТЕСТ ================= */
+    function startTest() {
+      currentTestIndex = 0;
+      correctAnswersCount = 0;
+      testQuestions = [];
+
+      for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+        const a = getRandomMultiplier();
+        const b = getRandomMultiplier();
+        const correct = a * b;
+
+        const wrongSet = new Set();
+        while (wrongSet.size < 2) {
+          // Правдоподобные варианты ответов
+          const delta = (Math.floor(Math.random() * 4) + 1) * (Math.random() < 0.5 ? 1 : -1);
+          const wrong = correct + delta;
+          if (wrong > 0 && wrong !== correct) {
+            wrongSet.add(wrong);
+          }
+        }
+
+        const options = [correct, ...wrongSet].sort(() => Math.random() - 0.5);
+        testQuestions.push({ a, b, correct, options });
+      }
+
+      renderTestQuestion();
+      showScreen('screen-test');
+    }
+
+    function renderTestQuestion() {
+      const q = testQuestions[currentTestIndex];
+      document.getElementById('test-progress').innerText = `ВОПРОС ${currentTestIndex + 1} ИЗ ${TOTAL_QUESTIONS}`;
+      document.getElementById('test-question').innerText = `${q.a} × ${q.b} = ?`;
+
+      const optionsBox = document.getElementById('test-options');
+      optionsBox.innerHTML = '';
+
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-choice';
+        btn.innerText = opt;
+        btn.onclick = () => answerQuestion(opt === q.correct);
+        optionsBox.appendChild(btn);
+      });
+    }
+
+    function answerQuestion(isCorrect) {
+      if (isCorrect) correctAnswersCount++;
+      currentTestIndex++;
+
+      if (currentTestIndex < TOTAL_QUESTIONS) {
+        renderTestQuestion();
+      } else {
+        finishTest();
+      }
+    }
+
+    function stopTest() {
+      if (confirm('Прервать тестирование и выйти?')) {
+        goToMain();
+      }
+    }
+
+    /* ================= САЛЮТ / КОНФЕТТИ ================= */
+    function launchFireworks() {
+      const duration = 3.5 * 1000;
+      const animationEnd = Date.now() + duration;
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+
+        confetti({
+          particleCount: 50,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      }, 200);
+    }
+
+    /* ================= РЕЗУЛЬТАТЫ ================= */
+    function finishTest() {
+      const isSuccess = correctAnswersCount >= (TOTAL_QUESTIONS * PASS_PERCENT);
+      const starsBox = document.getElementById('result-stars');
+      const textBox = document.getElementById('result-text');
+      const btnBox = document.getElementById('result-buttons');
+
+      if (isSuccess) {
+        starsBox.innerText = '⭐ ⭐ ⭐';
+        textBox.innerHTML = `
+          <span style="color: #70e000; font-size: 2rem; display:block; margin-bottom:10px;">ТЫ МОЛОДЕЦ!</span>
+          Верных ответов: <strong>${correctAnswersCount} из ${TOTAL_QUESTIONS}</strong>
+        `;
+        btnBox.innerHTML = `
+          <button class="btn-3d btn-green" onclick="startTest()">ПРОЙТИ ЕЩЁ РАЗ</button>
+          <button class="btn-3d btn-blue" onclick="goToMain()">В ГЛАВНОЕ МЕНЮ</button>
+        `;
+        launchFireworks();
+      } else {
+        starsBox.innerText = '⭐ ☆ ☆';
+        textBox.innerHTML = `
+          Верных ответов: <strong>${correctAnswersCount} из ${TOTAL_QUESTIONS}</strong><br>
+          <span style="color: #ff3366; font-size: 1.2rem;">(Меньше 80%)</span><br><br>
+          <span style="color: #00f2fe;">Не расстраивайся, давай повторим!</span>
+        `;
+        btnBox.innerHTML = `
+          <button class="btn-3d btn-yellow" onclick="startTrainer()">📖 К ТРЕНАЖЁРУ</button>
+          <button class="btn-3d btn-green" onclick="startTest()">ПОПРОБОВАТЬ СНОВА</button>
+          <button class="btn-3d btn-red" onclick="goToMain()">В ГЛАВНОЕ МЕНЮ</button>
+        `;
+      }
+
+      showScreen('screen-results');
+    }
+
+    // Инициализация при старте
+    updateMainMenu();
+  </script>
+</body>
+</html>
