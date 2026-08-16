@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Космическая таблица умножения</title>
+  <title>УМНОЖАЙКА</title>
   
   <!-- Telegram Web App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -75,13 +75,13 @@
       padding-bottom: 24px;
     }
 
-    /* Верхняя плашка ХАНГАР / РЕЖИМ */
+    /* Верхняя плашка с названием игры */
     .top-header {
       width: 100%;
       background: var(--header-plate);
       padding: 14px 0;
       text-align: center;
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       font-weight: 900;
       letter-spacing: 3px;
       color: var(--text-white);
@@ -320,13 +320,13 @@
 <body>
 
   <div class="app-container">
-    <div class="top-header" id="header-title">КОСМОДРОМ</div>
+    <div class="top-header" id="header-title">УМНОЖАЙКА</div>
 
     <!-- 1. ГЛАВНЫЙ ЭКРАН (ВЫБОР РЕЖИМА) -->
     <div id="screen-main" class="screen active">
       <div class="ship-stage">
         <button class="slider-arrow left" onclick="switchMode(-1)">◀</button>
-        <div id="main-ship" class="ship-icon">🚀</div>
+        <div id="main-ship" class="ship-icon">🛸</div>
         <div class="podium-glow"></div>
         <button class="slider-arrow right" onclick="switchMode(1)">▶</button>
       </div>
@@ -338,13 +338,13 @@
       </div>
 
       <button id="main-start-btn" class="btn-3d btn-yellow" onclick="handleStartAction()">
-        ВОЙТИ В ТРЕНАЖЁР
+        ВХОД В ТРЕНАЖЁР
       </button>
     </div>
 
     <!-- 2. ЭКРАН ТРЕНАЖЁРА -->
     <div id="screen-trainer" class="screen">
-      <div class="progress-text">ИЗУЧЕНИЕ ТАБЛИЦЫ</div>
+      <div class="progress-text">РЕЖИМ ОБУЧЕНИЯ</div>
       <div id="trainer-display" class="equation-display">3 × 4 = 12</div>
       
       <div class="controls-row">
@@ -411,10 +411,10 @@
       document.getElementById(id).classList.add('active');
 
       const title = document.getElementById('header-title');
-      if (id === 'screen-main') title.innerText = 'КОСМОДРОМ';
+      if (id === 'screen-main') title.innerText = 'УМНОЖАЙКА';
       if (id === 'screen-trainer') title.innerText = 'ТРЕНАЖЁР';
-      if (id === 'screen-test') title.innerText = 'ТЕСТИРОВАНИЕ';
-      if (id === 'screen-results') title.innerText = 'ИТОГИ ПОЛЁТА';
+      if (id === 'screen-test') title.innerText = 'ТЕСТ';
+      if (id === 'screen-results') title.innerText = 'РЕЗУЛЬТАТЫ';
     }
 
     function goToMain() {
@@ -515,7 +515,6 @@
 
         const wrongSet = new Set();
         while (wrongSet.size < 2) {
-          // Правдоподобные варианты ответов
           const delta = (Math.floor(Math.random() * 4) + 1) * (Math.random() < 0.5 ? 1 : -1);
           const wrong = correct + delta;
           if (wrong > 0 && wrong !== correct) {
